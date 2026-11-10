@@ -75,6 +75,10 @@ let order=[...ITEMS.keys()], idx=0, stars=0, mode='say', soundOn=true, revealed=
 const pic=document.getElementById('picWrap'), promptEl=document.getElementById('prompt'), ans=document.getElementById('answer'), hint=document.getElementById('sayHint'), brk=document.getElementById('break');
 const revealBtn=document.getElementById('revealBtn'), hearBtn=document.getElementById('hearIt'), sayBtn=document.getElementById('sayIt'), nextBtn=document.getElementById('nextBtn'), choicesEl=document.getElementById('choices');
 function speak(t){ if(!soundOn) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=.85; speechSynthesis.speak(u);}catch(e){} }
+const SILLY=[["🦖","Say it like a DINOSAUR! ROAR!"],["🤖","Say it like a ROBOT! Beep boop!"],["🐭","Say it in a tiny MOUSE voice!"],["🦁","Say it like a big LION! ROAR!"],["👶","Say it like a BABY! Goo goo!"],["🐸","Say it like a FROG! Ribbit!"],["🎤","Say it like a ROCK STAR!"],["🤫","Say it in a sneaky WHISPER!"],["📣","Say it SUPER LOUD!"],["🐶","Say it like a PUPPY! Woof woof!"]];
+let streak=0;
+function boing(){ if(!soundOn) return; try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(600,ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+.15); g.gain.setValueAtTime(.2,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.3); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+.3);}catch(e){} }
+function ding(){ if(!soundOn) return; try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); [880,1320].forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(.15,ctx.currentTime+i*.12); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.12+.4); o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+i*.12); o.stop(ctx.currentTime+i*.12+.4);});}catch(e){} }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function showCard(){
   const [emoji,name,desc]=ITEMS[order[idx]];
@@ -94,9 +98,12 @@ function reveal(){
   revealed=true; pic.textContent=emoji; pic.classList.remove('hiddenPic');
   revealBtn.style.display='none';
   speak(name);
+  const silly=SILLY[Math.floor(Math.random()*SILLY.length)];
   if(mode==='say'){
     promptEl.textContent='What is this? Say it out loud!';
-    hint.textContent='Look at the picture. Say the word, then tap "I said it!"';
+    hint.textContent=silly[0]+' '+silly[1];
+    boing();
+    hint.textContent=silly[0]+' '+silly[1]+' Then tap "I said it!"';
     hearBtn.style.display='inline-block'; sayBtn.style.display='inline-block';
   } else {
     promptEl.textContent='What is this? Pick the right word!';
@@ -108,13 +115,17 @@ function reveal(){
       const b=document.createElement('button'); b.className='choice'; b.textContent=o;
       b.onclick=()=>{ if(answered) return; answered=true;
         if(o===name){ b.classList.add('correct'); award(name,desc); }
-        else { b.classList.add('wrong'); ans.textContent='Try again! 💪'; hint.textContent='Look again — what is it?'; speak('Try again'); }
+        else { b.classList.add('wrong'); streak=0; ans.textContent='Oops! Try again! 💪'; hint.textContent='Look again — what is it?'; speak('Try again'); }
       };
       choicesEl.appendChild(b);
     });
   }
 }
 function award(name,desc){
+  streak++; ding();
+  if(streak>=3){ brk.innerHTML='🔥 '+streak+' in a row! You are on FIRE! 🔥'; }
+  if(stars+1===10){ brk.innerHTML='🌟🌟🌟 10 STARS! You are a SUPERSTAR! 🌟🌟🌟'; }
+  if(stars+1===25){ brk.innerHTML='🎉🎉 25 STARS! Halfway to LEGEND! 🎉🎉'; }
   stars++; document.getElementById('stars').innerHTML='⭐ '+stars+' &nbsp;•&nbsp; Card '+(idx+1)+' of 50';
   ans.textContent=name+'! 🎉'; hint.textContent=desc;
   speak(name+'. '+desc);
