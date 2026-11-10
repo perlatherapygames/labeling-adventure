@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>What's This? — Labeling Adventure</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#FFF7E6,#FFE4F1);color:#1F2937;min-height:100vh;text-align:center}
+header{padding:14px 10px 4px}
+h1{margin:0;font-size:34px;color:#BE185D}
+.sub{font-size:17px;color:#6B7280;margin:4px 0 0}
+#stars{font-size:26px;margin:8px 0 0}
+#bar{height:14px;background:#fff;border:2px solid #F9A8D4;border-radius:99px;margin:10px 18px 0;overflow:hidden}
+#fill{height:100%;width:0%;background:linear-gradient(90deg,#F472B6,#FBBF24);transition:width .4s}
+#modeRow{display:flex;gap:10px;justify-content:center;margin:14px 12px 0;flex-wrap:wrap}
+.modeBtn{flex:1;min-width:140px;max-width:220px;padding:13px 8px;font-size:18px;font-weight:800;border-radius:16px;border:3px solid #F9A8D4;background:#fff;color:#BE185D;cursor:pointer}
+.modeBtn.on{background:#F472B6;color:#fff;border-color:#BE185D}
+#card{background:#fff;border:4px solid #F9A8D4;border-radius:26px;margin:16px 14px;padding:18px 14px 22px;min-height:520px;box-shadow:0 8px 24px rgba(190,24,93,.15)}
+#picWrap{font-size:150px;line-height:1.1;min-height:190px;display:flex;align-items:center;justify-content:center}
+#picWrap.hiddenPic{font-size:110px;filter:blur(0)}
+#revealBtn{font-size:22px;font-weight:800;padding:14px 26px;border-radius:99px;border:none;background:#FBBF24;color:#78350F;cursor:pointer;margin-top:6px}
+#prompt{font-size:26px;font-weight:800;margin:14px 0 6px}
+#choices{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px}
+.choice{font-size:22px;font-weight:800;padding:16px 18px;border-radius:18px;border:3px solid #93C5FD;background:#EFF6FF;color:#1D4ED8;cursor:pointer;min-width:110px}
+.choice.correct{background:#BBF7D0;border-color:#16A34A;color:#14532D}
+.choice.wrong{background:#FECACA;border-color:#DC2626;color:#7F1D1D}
+#answer{font-size:30px;font-weight:900;color:#BE185D;margin:12px 0 4px;min-height:38px}
+#sayHint{font-size:18px;color:#6B7280}
+.bigBtn{font-size:22px;font-weight:800;padding:16px 24px;border-radius:99px;border:none;cursor:pointer;margin:8px 6px 0}
+#sayIt{background:#22C55E;color:#fff}
+#hearIt{background:#3B82F6;color:#fff}
+#nextBtn{background:#F472B6;color:#fff;display:none}
+#break{font-size:24px;font-weight:800;color:#7C3AED;margin:10px 0}
+#controls{display:flex;gap:10px;justify-content:center;margin:0 14px 18px;flex-wrap:wrap}
+.smallBtn{font-size:17px;font-weight:700;padding:12px 16px;border-radius:14px;border:2px solid #D1D5DB;background:#fff;cursor:pointer}
+#end{font-size:24px;font-weight:800;color:#BE185D}
+#confetti{font-size:44px}
+.talk{font-size:16px;color:#6B7280;margin:6px 14px 0}
+</style>
+</head>
+<body>
+<header><h1>🎁 What's This?</h1><p class="sub">Labeling Adventure — say it, pick it, earn stars!</p><div id="stars">⭐ 0 &nbsp;•&nbsp; Card <span id="num">1</span> of 50</div><div id="bar"><div id="fill"></div></div></header>
+<p class="talk">👩‍👦 Mom is your helper, not your hiding spot! Sit next to me, look at the screen, and let's play together.</p>
+<div id="modeRow">
+<button class="modeBtn on" id="sayMode">🗣️ Say It!</button>
+<button class="modeBtn" id="pickMode">👆 Pick It!</button>
+</div>
+<div id="card">
+<div id="picWrap">🎁</div>
+<button id="revealBtn">Open the Mystery Box! 🎁</button>
+<div id="prompt">What's hiding in the box?</div>
+<div id="choices" style="display:none"></div>
+<div id="answer"></div>
+<div id="sayHint"></div>
+<div id="break"></div>
+<button class="bigBtn" id="hearIt" style="display:none">🔊 Hear It</button>
+<button class="bigBtn" id="sayIt" style="display:none">⭐ I said it!</button>
+<button class="bigBtn" id="nextBtn">Next! ➡️</button>
+</div>
+<div id="controls">
+<button class="smallBtn" id="shuffleBtn">🔀 Shuffle</button>
+<button class="smallBtn" id="restartBtn">↩️ Play Again</button>
+<button class="smallBtn" id="soundBtn">🔊 Sound: On</button>
+</div>
+<div id="end"></div>
+<script>
+const ITEMS=[
+["🧃","Juice","It is juice. You can drink it."],["⚽","Ball","It is a ball. You can throw it."],["🍪","Cookie","It is a cookie. You can eat it."],["🍎","Apple","It is an apple. It is a red fruit."],["🍌","Banana","It is a banana. It is yellow."],["🥛","Milk","It is milk. You can drink it."],["💧","Water","It is water. You can drink it."],["📖","Book","It is a book. You can read it."],["🖍️","Crayon","It is a crayon. You can draw with it."],["🚗","Car","It is a car. It goes vroom!"],["🚚","Truck","It is a truck. It is big."],["🐶","Dog","It is a dog. It says woof!"],["🧸","Teddy bear","It is a teddy bear. You can hug it."],["👟","Shoes","They are shoes. You wear them on your feet."],["🧥","Coat","It is a coat. You wear it when it is cold."],["🥤","Cup","It is a cup. You drink from it."],["🧩","Puzzle","It is a puzzle. You put the pieces together."],["🧱","Blocks","They are blocks. You can build with them."],["🛝","Swing","It is a swing. You can swing on it."],["🌳","Park","It is a park. You can play there."],["🏠","House","It is a house. You live in it."],["🛏️","Bed","It is a bed. You sleep in it."],["🛏️","Blanket","It is a blanket. It keeps you warm."],["🛁","Bath","It is a bath. You get clean in it."],["🪥","Toothbrush","It is a toothbrush. You brush your teeth."],["🎸","Guitar","It is a guitar. You can play music."],["📺","TV","It is a TV. You can watch it."],["🤧","Tissue","It is a tissue. You blow your nose."],["👩","Mom","It is Mom. She loves you."],["👨","Dad","It is Dad. He loves you."],["🐱","Cat","It is a cat. It says meow!"],["🐦","Bird","It is a bird. It can fly."],["🐟","Fish","It is a fish. It swims."],["🌸","Flower","It is a flower. It smells nice."],["🌳","Tree","It is a tree. It is tall."],["☀️","Sun","It is the sun. It is hot and bright."],["🌙","Moon","It is the moon. You see it at night."],["⭐","Star","It is a star. It twinkles."],["🎂","Cake","It is a cake. You eat it at a party."],["🍦","Ice cream","It is ice cream. It is cold and yummy."],["🥪","Sandwich","It is a sandwich. You can eat it."],["🍕","Pizza","It is pizza. It is yummy."],["🪑","Chair","It is a chair. You sit on it."],["🛋️","Couch","It is a couch. You sit on it."],["💡","Lamp","It is a lamp. It gives light."],["📱","Phone","It is a phone. You can talk on it."],["🕐","Clock","It is a clock. It tells the time."],["🔑","Key","It is a key. It opens the door."],["🎩","Hat","It is a hat. You wear it on your head."],["🎒","Backpack","It is a backpack. You carry things in it."]
+];
+let order=[...ITEMS.keys()], idx=0, stars=0, mode='say', soundOn=true, revealed=false, answered=false;
+const pic=document.getElementById('picWrap'), promptEl=document.getElementById('prompt'), ans=document.getElementById('answer'), hint=document.getElementById('sayHint'), brk=document.getElementById('break');
+const revealBtn=document.getElementById('revealBtn'), hearBtn=document.getElementById('hearIt'), sayBtn=document.getElementById('sayIt'), nextBtn=document.getElementById('nextBtn'), choicesEl=document.getElementById('choices');
+function speak(t){ if(!soundOn) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=.85; speechSynthesis.speak(u);}catch(e){} }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function showCard(){
+  const [emoji,name,desc]=ITEMS[order[idx]];
+  revealed=false; answered=false;
+  pic.textContent='🎁'; pic.classList.add('hiddenPic');
+  revealBtn.style.display='inline-block';
+  promptEl.textContent="What's hiding in the box?";
+  choicesEl.style.display='none'; choicesEl.innerHTML='';
+  ans.textContent=''; hint.textContent=''; brk.textContent='';
+  hearBtn.style.display='none'; sayBtn.style.display='none'; nextBtn.style.display='none';
+  document.getElementById('num').textContent=idx+1;
+  document.getElementById('fill').style.width=(idx/ITEMS.length*100)+'%';
+  document.getElementById('end').textContent='';
+}
+function reveal(){
+  const [emoji,name,desc]=ITEMS[order[idx]];
+  revealed=true; pic.textContent=emoji; pic.classList.remove('hiddenPic');
+  revealBtn.style.display='none';
+  speak(name);
+  if(mode==='say'){
+    promptEl.textContent='What is this? Say it out loud!';
+    hint.textContent='Look at the picture. Say the word, then tap "I said it!"';
+    hearBtn.style.display='inline-block'; sayBtn.style.display='inline-block';
+  } else {
+    promptEl.textContent='What is this? Pick the right word!';
+    // build 3 choices
+    const others=shuffle(ITEMS.filter(x=>x[1]!==name)).slice(0,2).map(x=>x[1]);
+    const opts=shuffle([name,...others]);
+    choicesEl.style.display='flex';
+    opts.forEach(o=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=o;
+      b.onclick=()=>{ if(answered) return; answered=true;
+        if(o===name){ b.classList.add('correct'); award(name,desc); }
+        else { b.classList.add('wrong'); ans.textContent='Try again! 💪'; hint.textContent='Look again — what is it?'; speak('Try again'); }
+      };
+      choicesEl.appendChild(b);
+    });
+  }
+}
+function award(name,desc){
+  stars++; document.getElementById('stars').innerHTML='⭐ '+stars+' &nbsp;•&nbsp; Card '+(idx+1)+' of 50';
+  ans.textContent=name+'! 🎉'; hint.textContent=desc;
+  speak(name+'. '+desc);
+  sayBtn.style.display='none'; hearBtn.style.display='none';
+  choicesEl.querySelectorAll('.choice').forEach(c=>{ if(c.textContent===name) c.classList.add('correct'); });
+  if((idx+1)%5===0){ brk.innerHTML='🎉 5 in a row! Dance break! 🕺💃 <br>Shake your arms, wiggle, then keep going!'; }
+  nextBtn.style.display='inline-block';
+  document.getElementById('fill').style.width=((idx+1)/ITEMS.length*100)+'%';
+  if(idx===ITEMS.length-1){ document.getElementById('end').innerHTML='<div id="confetti">🎉🏆🎉</div>You did ALL 50! You are a labeling superstar!'; }
+}
+revealBtn.onclick=reveal;
+hearBtn.onclick=()=>{ const [e,n,d]=ITEMS[order[idx]]; speak(n+'. '+d); };
+sayBtn.onclick=()=>{ const [e,n,d]=ITEMS[order[idx]]; award(n,d); };
+nextBtn.onclick=()=>{ idx++; if(idx>=ITEMS.length){ idx=0; } showCard(); };
+document.getElementById('sayMode').onclick=()=>{ mode='say'; document.getElementById('sayMode').classList.add('on'); document.getElementById('pickMode').classList.remove('on'); showCard(); };
+document.getElementById('pickMode').onclick=()=>{ mode='pick'; document.getElementById('pickMode').classList.add('on'); document.getElementById('sayMode').classList.remove('on'); showCard(); };
+document.getElementById('shuffleBtn').onclick=()=>{ order=shuffle(order); idx=0; showCard(); };
+document.getElementById('restartBtn').onclick=()=>{ order=shuffle(order); idx=0; stars=0; document.getElementById('stars').innerHTML='⭐ 0 &nbsp;•&nbsp; Card 1 of 50'; showCard(); };
+document.getElementById('soundBtn').onclick=(e)=>{ soundOn=!soundOn; e.target.textContent=soundOn?'🔊 Sound: On':'🔇 Sound: Off'; };
+order=shuffle(order); showCard();
+</script>
+</body>
+</html>
